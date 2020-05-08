@@ -1,0 +1,466 @@
+---
+title: "ABI USA Mobility Report"
+author: 'NAZ:  C. Ieva'
+output: word_document 
+always_allow_html: true
+
+---
+
+```{r setup, include=FALSE}
+###Load Libraries
+library(flextable)
+library(socviz)
+library(tinytex)
+library(visNetwork)
+library(networkD3)
+library(vctrs)
+library(ggwordcloud)
+library(tidyverse)
+library(fastDummies)
+library(gbm)
+library(rpart.plot)
+library(rpart)
+library(caret)
+library(plotly)
+library(rbokeh)
+library(crosstalk)
+library(MonteCarlo)
+library(SCperf)
+library(DT)
+library(dplyr)
+library(qrmtools)
+library(TTR)
+library(xts)
+library(zoo)
+library(dplyr)
+library(quantmod)
+library(qrmtools)
+library(forecastHybrid)
+library(forecast)
+library(Quandl)
+library(ggplot2)
+library(ggridges)
+library(MASS)
+library(GMDH)
+library(nnfor)
+library(glmnet)
+library(stats)
+library(keras)
+library(xgboost)
+library(XBRL)
+library(finreportr)
+library(reshape2)
+library(highcharter)
+library(dygraphs)
+library(PerformanceAnalytics)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(wordcloud)
+library(igraph)
+library(statnet)
+library(dplyr)
+library(network)
+library(magrittr)
+library(googledrive)
+library(googlesheets)
+library(reshape2)
+library(ggplot2)
+library(GGally)
+library(sna)
+library(DT)
+library(reshape2)
+library(statnet)
+library(network)   #Use for visualizations
+library(ggridges)
+library(ggplot2)
+library(intergraph)
+library(gtrendsR)
+library(prophet)
+library(choroplethr)
+library(statebins)
+library(quanteda)
+library(readtext)
+library(tm)
+library(quanteda.textmodels)
+library(ggdendro)
+library(maps)
+library(usmap)
+library(stringr)
+library(sf)
+library(viridis)
+library(maps)
+library(socviz)
+library(tigris)
+library(tidycensus)
+library(tidyverse)
+library(leaflet)
+library(lubridate)
+library(blsAPI)
+library(blscrapeR)
+library(tibble)
+options(scipen=999)
+
+
+
+```
+
+
+
+
+
+```{r Data Intake, echo=FALSE, include=FALSE}
+
+mbr<-read_csv("C:/Users/y726269/Documents/R_Working_Folder/Mobility_Report/Mobility_Report.csv")  #Local Folder
+
+### Clean Data
+#mbr$date <- dmy(mbr$date) #Convert to Date  
+mbr$sub_region_1[is.na(mbr$sub_region_1)] <-0  # Remove NAs
+mbr$sub_region_2[is.na(mbr$sub_region_2)] <-0  # Remove NAs
+mbr<-data.frame(mbr)
+
+
+#glimpse(mbr)
+### Build By Country
+USA_DF <- mbr %>% 
+  dplyr::filter(mbr$country_region_code =="US" & mbr$sub_region_1 =="0") %>%
+  dplyr::select(date, retail_and_recreation_percent_change_from_baseline, parks_percent_change_from_baseline, transit_stations_percent_change_from_baseline,
+         workplaces_percent_change_from_baseline, residential_percent_change_from_baseline, grocery_and_pharmacy_percent_change_from_baseline)
+
+USA_xts<-xts(x=USA_DF[,-1], order.by=USA_DF$date)
+
+USA_RR_GG <- ggplot(USA_DF, aes(x=date, y=retail_and_recreation_percent_change_from_baseline)) +
+   geom_point() +
+   geom_smooth(method = "glm", se = TRUE, method.args = list(family = "gaussian"), linetype = "dashed") + ggtitle("USA: Retail and Recreation Mobility Index Percent Change") 
+USA_GR_GG <- ggplot(USA_DF, aes(x=date, y=grocery_and_pharmacy_percent_change_from_baseline)) +
+   geom_point() +
+   geom_smooth(method = "glm", se = TRUE, method.args = list(family = "gaussian"), linetype = "dashed") + ggtitle("USA: Grocery Mobility Index Percent Change") 
+
+USA_PK_GG <- ggplot(USA_DF, aes(x=date, y=parks_percent_change_from_baseline)) +
+   geom_point() +
+   geom_smooth(method = "glm", se = TRUE, method.args = list(family = "gaussian"), linetype = "dashed") + ggtitle("USA: Parks Mobility Index Percent Change") 
+
+
+USA_TR_GG <- ggplot(USA_DF, aes(x=date, y=transit_stations_percent_change_from_baseline)) +
+   geom_point() +
+   geom_smooth(method = "glm", se = TRUE, method.args = list(family = "gaussian"), linetype = "dashed") + ggtitle("USA: Transit Mobility Index Percent Change") 
+
+
+USA_WK_GG <- ggplot(USA_DF, aes(x=date, y=workplaces_percent_change_from_baseline)) +
+   geom_point() +
+   geom_smooth(method = "glm", se = TRUE, method.args = list(family = "gaussian"), linetype = "dashed") + ggtitle("USA: Workplace Mobility Index Percent Change") 
+
+
+USA_RS_GG <- ggplot(USA_DF, aes(x=date, y=residential_percent_change_from_baseline)) +
+   geom_point() +
+   geom_smooth(method = "glm", se = TRUE, method.args = list(family = "gaussian"), linetype = "dashed") + ggtitle("USA: Residential Mobility Index Percent Change") 
+
+
+
+
+
+
+```
+
+# Historical USA Country Data
+
+Historical country wide data for USA
+
+## Retail
+```{r Retail GG, out.width='100%', message=FALSE, echo=FALSE}
+USA_RR_GG
+```
+
+## Grocery
+```{r Grocery GG, out.width='100%', message=FALSE, echo=FALSE}
+USA_GR_GG
+```
+
+## Parks
+```{r Parks GG, out.width='100%', message=FALSE, echo=FALSE}
+USA_PK_GG
+```
+
+## Transit
+```{r Transit GG, out.width='100%', message=FALSE, echo=FALSE}
+USA_TR_GG
+```
+
+## Workplace
+```{r Workplace, out.width='100%', message=FALSE, echo=FALSE}
+USA_WK_GG
+```
+
+## Residential
+```{r Residential, out.width='100%', message=FALSE, echo=FALSE}
+USA_RS_GG
+```
+
+# Prediction Country Wide USA
+
+## Retail and Recreation Prediction
+```{r Retail Pred, out.width='100%', message=FALSE, echo=FALSE, warnings=FALSE}
+L<-14  #Days Pred
+
+b2_pred<-data.frame(USA_DF$date,USA_DF$retail_and_recreation_percent_change_from_baseline)
+colnames(b2_pred)<-c('ds','y')
+
+model2 <- prophet(b2_pred, daily.seasonality= TRUE, weekly.seasonality=TRUE) # Fit Model
+
+
+### Make Future DF
+future2 <- make_future_dataframe(model2, periods = L, freq = "days", include_history = FALSE) 
+#FREQ = Hourly
+
+### Model Forecast
+forecast2 <- predict(model2, future2)  #Forecast
+retail_pred<-forecast2$yhat
+plot(model2, forecast2)
+
+```
+
+## Parks Prediction
+```{r Parks Pred, out.width='100%', echo=FALSE, message=FALSE, warnings=FALSE}
+
+b2_pred<-data.frame(USA_DF$date,USA_DF$parks_percent_change_from_baseline)
+colnames(b2_pred)<-c('ds','y')
+
+model2 <- prophet(b2_pred, daily.seasonality= TRUE, weekly.seasonality=TRUE) # Fit Model
+
+
+### Make Future DF
+future2 <- make_future_dataframe(model2, periods = L, freq = "days", include_history = FALSE) 
+#FREQ = Hourly
+
+### Model Forecast
+forecast2 <- predict(model2, future2)  #Forecast
+parks_pred<-forecast2$yhat
+plot(model2, forecast2)
+```
+
+## Grocery & Pharmacy Prediction
+```{r Grocery Pred, out.width='100%', echo=FALSE,message=FALSE,  warnings=FALSE}
+
+b2_pred<-data.frame(USA_DF$date,USA_DF$grocery_and_pharmacy_percent_change_from_baseline)
+colnames(b2_pred)<-c('ds','y')
+
+model2 <- prophet(b2_pred, daily.seasonality= TRUE, weekly.seasonality=TRUE) # Fit Model
+
+
+### Make Future DF
+future2 <- make_future_dataframe(model2, periods = L, freq = "days", include_history = FALSE) 
+#FREQ = Hourly
+
+### Model Forecast
+forecast2 <- predict(model2, future2)  #Forecast
+grocery_pred<-forecast2$yhat
+plot(model2, forecast2)
+```
+
+## Transit Prediction
+```{r Transit Pred, out.width='100%', echo=FALSE, message=FALSE, warnings=FALSE}
+
+b2_pred<-data.frame(USA_DF$date,USA_DF$transit_stations_percent_change_from_baseline)
+colnames(b2_pred)<-c('ds','y')
+
+model2 <- prophet(b2_pred, daily.seasonality= TRUE, weekly.seasonality=TRUE) # Fit Model
+
+
+### Make Future DF
+future2 <- make_future_dataframe(model2, periods = L, freq = "days", include_history = FALSE) 
+#FREQ = Hourly
+
+### Model Forecast
+forecast2 <- predict(model2, future2)  #Forecast
+transit_pred<-forecast2$yhat
+plot(model2, forecast2)
+```
+
+## Workplace Prediction
+```{r WK PLace, out.width='100%', echo=FALSE, message=FALSE, warnings=FALSE}
+
+b2_pred<-data.frame(USA_DF$date,USA_DF$workplaces_percent_change_from_baseline)
+colnames(b2_pred)<-c('ds','y')
+
+model2 <- prophet(b2_pred, daily.seasonality= TRUE, weekly.seasonality=TRUE) # Fit Model
+
+
+### Make Future DF
+future2 <- make_future_dataframe(model2, periods = L, freq = "days", include_history = FALSE) 
+#FREQ = Hourly
+
+### Model Forecast
+forecast2 <- predict(model2, future2)  #Forecast
+workplace_pred<-forecast2$yhat
+plot(model2, forecast2)
+```
+
+
+## Residential Percent Change
+```{r Zip Code, out.width='100%', echo=FALSE, message=FALSE, warnings=FALSE}
+
+b2_pred<-data.frame(USA_DF$date,USA_DF$residential_percent_change_from_baseline)
+colnames(b2_pred)<-c('ds','y')
+
+model2 <- prophet(b2_pred, daily.seasonality= TRUE, weekly.seasonality=TRUE) # Fit Model
+
+
+### Make Future DF
+future2 <- make_future_dataframe(model2, periods = L, freq = "days", include_history = FALSE) 
+#FREQ = Hourly
+
+### Model Forecast
+forecast2 <- predict(model2, future2)  #Forecast
+res_pred<-forecast2$yhat
+plot(model2, forecast2)
+
+
+### Make CSV
+pred_df<-data.frame(future2,res_pred,workplace_pred, grocery_pred, transit_pred,parks_pred, retail_pred)
+write.csv(pred_df, "USA_PRED.csv",row.names = FALSE)
+```
+```{r Make Leaflet, echo=FALSE, message=FALSE, include=FALSE}
+
+### Select Options 
+options(nextjournal.display.htmlwidgetsEnabled=TRUE)
+options(tigris_use_cache = TRUE)
+
+
+### Build By Country
+USA_State_DF <- mbr %>% 
+  dplyr::filter(mbr$country_region_code =="US" & mbr$sub_region_1 !="0") %>%
+  dplyr::select(sub_region_1, retail_and_recreation_percent_change_from_baseline, parks_percent_change_from_baseline, transit_stations_percent_change_from_baseline,
+         workplaces_percent_change_from_baseline, residential_percent_change_from_baseline, grocery_and_pharmacy_percent_change_from_baseline)
+
+USA_State_DF<-data.frame(USA_State_DF)
+USA_State_DF[is.na(USA_State_DF)] <-0
+#glimpse(USA_State_AVG)
+
+### Summarize  Mean
+
+USA_State_AVG<-USA_State_DF %>% dplyr::group_by(sub_region_1) %>% summarise(avg_retail = mean(retail_and_recreation_percent_change_from_baseline),
+  avg_grocery = mean(grocery_and_pharmacy_percent_change_from_baseline),
+  avg_parks = mean(parks_percent_change_from_baseline),
+  avg_transit=mean(transit_stations_percent_change_from_baseline),
+  avg_workplace=mean(workplaces_percent_change_from_baseline),  
+  avg_residential=mean(residential_percent_change_from_baseline))
+
+round(USA_State_AVG[,-1], digits=2)
+
+
+###  USA Charts
+title<-c("Average State Mobility Index: Retail")
+Retail_Map<-statebins_continuous(state_data = USA_State_AVG, state_col= "sub_region_1",
+                     text_color = "white", value_col = "avg_retail",
+                     brewer_pal="Blues", font_size = 3,
+                     legend_title=title)
+
+
+title<-c("Average State Mobility Index: Grocery")
+Grocery_Map<-statebins_continuous(state_data = USA_State_AVG, state_col= "sub_region_1",
+                     text_color = "white", value_col = "avg_grocery",
+                     brewer_pal="Blues", font_size = 3,
+                     legend_title=title)
+
+
+title<-c("Average State Mobility Index: Parks")
+Parks_Map<-statebins_continuous(state_data = USA_State_AVG, state_col= "sub_region_1",
+                     text_color = "white", value_col = "avg_parks",
+                     brewer_pal="Blues", font_size = 3,
+                     legend_title=title)
+
+title<-c("Average State Mobility Index: Transit")
+Transit_Map<-statebins_continuous(state_data = USA_State_AVG, state_col= "sub_region_1",
+                     text_color = "white", value_col = "avg_transit",
+                     brewer_pal="Blues", font_size = 3,
+                     legend_title=title)
+
+title<-c("Average State Mobility Index: Workplace")
+Workplace_Map<-statebins_continuous(state_data = USA_State_AVG, state_col= "sub_region_1",
+                     text_color = "white", value_col = "avg_workplace",
+                     brewer_pal="Blues", font_size = 3,
+                     legend_title=title)
+
+title<-c("Average State Mobility Index: Workplace")
+Residential_Map<-statebins_continuous(state_data = USA_State_AVG, state_col= "sub_region_1",
+                     text_color = "white", value_col = "avg_residential",
+                     brewer_pal="Blues", font_size = 3,
+                     legend_title=title)
+
+### Cluster Analysis
+USA_State_AVG_Values<-USA_State_AVG[,-1]
+
+KS<-kmeans(x =USA_State_AVG_Values, centers = 4)  #Use x-xis to assign cluster per user)
+#glimpse(K4)
+
+### Append Cluster to Data
+USA_State_AVG$cluster <- as.integer(KS$cluster)  #Append Cluster to Training
+
+
+State_Cluster_CF<-ggplot(data = USA_State_AVG, mapping = aes(x =avg_residential, y = avg_workplace, colour=cluster, label = sub_region_1)) +
+    geom_point(alpha = .1) +
+    geom_jitter(alpha = 0.3)  
+
+
+round(USA_State_AVG[,-1], digits=2)
+
+USA_State_AVG<-data.frame(USA_State_AVG)
+
+### States Average
+USA_State_AVG_DT <-datatable(USA_State_AVG, extensions = 'Buttons', options = list(
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+  )
+  )
+### Make CSV
+write.csv(USA_State_AVG, "USA_State_AVG.csv",row.names = FALSE)
+
+```
+
+# State Data
+
+## State Data
+```{r  Table, fig.align='center', fig.cap='State Data', echo=FALSE, message=FALSE, fig.height=10, fig.width=7}
+    ft <- flextable(USA_State_AVG)
+    ft
+
+```
+
+
+## Cluster Plot By States
+```{r Cluster1, out.width='100%', message=FALSE, echo=FALSE}
+ggplotly(State_Cluster_CF)
+```
+
+
+
+## Retail Map
+```{r MAP1, out.width='100%', echo=FALSE}
+Retail_Map
+```
+
+## Grocery Map
+```{r MAP2, out.width='100%', echo=FALSE}
+Grocery_Map
+```
+
+## Parks Map
+```{r MAP3, out.width='100%', echo=FALSE}
+Parks_Map
+```
+
+## Transit Map
+```{r MAP4, out.width='100%', echo=FALSE}
+Transit_Map
+```
+
+## WorkPlace Map
+```{r MAP5, out.width='100%', echo=FALSE}
+Workplace_Map
+```
+
+## Residential Map
+```{r MAP6, out.width='100%', echo=FALSE}
+Residential_Map
+```
+
